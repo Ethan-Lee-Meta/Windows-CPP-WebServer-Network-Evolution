@@ -100,6 +100,7 @@ auto finishedFlag = std::make_shared<std::atomic<bool>>(false);
 
 // Create a thread to handle this client connection
 std::thread t(handle_client, Socket(clientSock), finishedFlag, clientAddr);
+```
 
 ### 中文说明：
 这段代码在新连接接入时运行，获取客户端地址，并启动一个新线程处理与该客户端的通信。每个处理线程独立运行，实现并发通信。
@@ -116,7 +117,7 @@ This code is executed when a new connection is accepted. It retrieves the client
     std::lock_guard<std::mutex> lock(g_sessionsMutex);
     g_clientSessions.emplace_back(std::move(t), finishedFlag);
 }
-
+```
 
 **中文说明：**  
 这里使用 `std::lock_guard` 对全局互斥量 `g_sessionsMutex` 加锁，确保将新的会话（线程和 finished 标志）加入全局容器时线程安全。  
@@ -138,7 +139,7 @@ g_sessionCV.wait(lock, [] {
     }
     return false;
 });
-
+```
 
 ### 条件变量与 unique_lock 的使用
 
@@ -162,6 +163,7 @@ When a session finishes, another thread calls `g_sessionCV.notify_one()` to wake
 
 ```cpp
 std::thread receiver(receive_thread, std::ref(clientSocket));
+```
 
 ## 客户端接收线程 (Client Receive Thread)
 
@@ -210,6 +212,7 @@ g_sessionCV.wait(lock, [] {
     }
     return false;
 });
+```
 
 ### 条件变量与 unique_lock 的使用
 
@@ -231,7 +234,7 @@ When the wait predicate is satisfied (i.e., a session has finished), the conditi
     std::lock_guard<std::mutex> lock(g_sessionsMutex);
     g_clientSessions.emplace_back(std::move(t), finishedFlag);
 }
-
+```
 
 **中文说明：**  
 通过在代码块中使用 `std::lock_guard`，确保在将新的会话插入 `g_clientSessions` 时获得互斥锁，保证线程安全。  
@@ -319,11 +322,13 @@ This convention requires that all code accessing `g_clientSessions` must first l
 
 ```cpp
 auto finishedFlag = std::make_shared<std::atomic<bool>>(false);
+```
 
 或直接使用 new（但推荐使用 make_shared）：
+
 ```cpp
 std::shared_ptr<std::atomic<bool>> finished(new std::atomic<bool>(false));
-
+```
 
 **中文说明：**
 
@@ -341,7 +346,7 @@ Both methods do not require manual deletion because the smart pointer will autom
 Socket(Socket&& other) noexcept : sock(other.sock) {
     other.sock = INVALID_SOCKET;
 }
-
+```
 
 **中文说明：**
 
@@ -365,7 +370,7 @@ When a temporary object or std::move() is used, this constructor transfers the r
     int clientAddrLen = sizeof(clientAddr); 
     clientSock = accept(listenSocket.get(), reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrLen);
 }
-
+```
 
 **中文说明：**
 
@@ -389,7 +394,7 @@ g_sessionCV.wait(lock, [] {
     }
     return false;
 });
-
+```
 
 **中文说明：**
 
